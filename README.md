@@ -39,7 +39,7 @@ inputs.direnv-az.url = "github:direnv-contrib/direnv-az";
 With Home Manager, import the module and enable it. It sources the scripts from direnv's standard library, so `programs.direnv.enable` must be on as well:
 
 ```nix
-imports = [ inputs.direnv-az.homeManagerModules.default ];
+imports = [ inputs.direnv-az.homeModules.default ];
 
 programs.direnv-az.enable = true;
 ```
