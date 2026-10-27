@@ -8,6 +8,7 @@
 
   outputs =
     {
+      self,
       nixpkgs,
       flake-utils,
       ...
@@ -48,5 +49,33 @@
           ];
         };
       }
-    );
+    )
+    // {
+      # Home Manager module: enabling it sources the helpers from direnv's standard library
+      homeModules.default =
+        {
+          config,
+          lib,
+          pkgs,
+          ...
+        }:
+        {
+          options.programs.direnv.contrib.az.enable = lib.mkEnableOption "the direnv-az helpers";
+
+          config = lib.mkIf config.programs.direnv.contrib.az.enable {
+            assertions = [
+              {
+                assertion = config.programs.direnv.enable;
+                message = "programs.direnv.contrib.az.enable requires programs.direnv.enable = true";
+              }
+            ];
+
+            programs.direnv.stdlib = ''
+              for lib in ${self.packages.${pkgs.stdenv.hostPlatform.system}.default}/share/direnv-az/*.sh; do
+                source "$lib"
+              done
+            '';
+          };
+        };
+    };
 }

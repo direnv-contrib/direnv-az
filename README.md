@@ -30,27 +30,36 @@ direnv loads every `*.sh` file in `~/.config/direnv/lib/` before it evaluates a 
 
 ### Using Nix
 
-Add the flake as an input, and install its package:
+Add the flake as an input:
 
 ```nix
 inputs.direnv-az.url = "github:direnv-contrib/direnv-az";
 ```
 
+With Home Manager, import the module and enable it under `programs.direnv.contrib`, next to direnv itself. It sources the scripts from direnv's standard library, so `programs.direnv.enable` must be on:
+
+```nix
+imports = [ inputs.direnv-az.homeModules.default ];
+
+programs.direnv = {
+  enable = true;
+  contrib.az.enable = true;
+};
+```
+
+Without Home Manager, install the package, which places the scripts in `share/direnv-az`:
+
 ```nix
 environment.systemPackages = [ inputs.direnv-az.packages.${system}.default ];
 ```
 
-The package places the scripts in `share/direnv-az`. With Home Manager managing direnv, source them from the standard library:
+Then source them from the standard library with a loop in `~/.config/direnv/lib/direnv-az.sh`, pointing at the package path:
 
-```nix
-programs.direnv.stdlib = ''
-  for lib in ${inputs.direnv-az.packages.${system}.default}/share/direnv-az/*.sh; do
-    source "$lib"
-  done
-'';
+```bash
+for lib in /path/to/direnv-az/share/direnv-az/*.sh; do
+  source "$lib"
+done
 ```
-
-If you manage `~/.config/direnv` yourself, put the same loop in `~/.config/direnv/lib/direnv-az.sh`, pointing at the package path.
 
 ### Manual
 
@@ -59,6 +68,21 @@ git clone https://github.com/direnv-contrib/direnv-az.git ~/.local/share/direnv-
 mkdir -p ~/.config/direnv/lib
 ln -s ~/.local/share/direnv-az/lib/*.sh ~/.config/direnv/lib/
 ```
+
+### Pinned in a project
+
+To use a helper without installing anything, pin it in a project's `.envrc` with direnv's `source_url`. This also works for teammates and CI, which only need direnv. Ask direnv for the hash of the file, then put it in the `.envrc`:
+
+```bash
+direnv fetchurl https://raw.githubusercontent.com/direnv-contrib/direnv-az/v0.1.0/lib/az_secret.sh
+```
+
+```bash
+source_url "https://raw.githubusercontent.com/direnv-contrib/direnv-az/v0.1.0/lib/az_secret.sh" "sha256-…"
+use_az_secret my-vault/db-creds
+```
+
+Replace `v0.1.0` with the release you want. direnv refuses to load a file whose content does not match the hash, so a tag that is later changed cannot swap the code under you.
 
 ## Usage
 
