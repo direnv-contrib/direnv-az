@@ -30,27 +30,33 @@ direnv loads every `*.sh` file in `~/.config/direnv/lib/` before it evaluates a 
 
 ### Using Nix
 
-Add the flake as an input, and install its package:
+Add the flake as an input:
 
 ```nix
 inputs.direnv-az.url = "github:direnv-contrib/direnv-az";
 ```
 
+With Home Manager, import the module and enable it. It sources the scripts from direnv's standard library, so `programs.direnv.enable` must be on as well:
+
+```nix
+imports = [ inputs.direnv-az.homeManagerModules.default ];
+
+programs.direnv-az.enable = true;
+```
+
+Without Home Manager, install the package, which places the scripts in `share/direnv-az`:
+
 ```nix
 environment.systemPackages = [ inputs.direnv-az.packages.${system}.default ];
 ```
 
-The package places the scripts in `share/direnv-az`. With Home Manager managing direnv, source them from the standard library:
+Then source them from the standard library with a loop in `~/.config/direnv/lib/direnv-az.sh`, pointing at the package path:
 
-```nix
-programs.direnv.stdlib = ''
-  for lib in ${inputs.direnv-az.packages.${system}.default}/share/direnv-az/*.sh; do
-    source "$lib"
-  done
-'';
+```bash
+for lib in /path/to/direnv-az/share/direnv-az/*.sh; do
+  source "$lib"
+done
 ```
-
-If you manage `~/.config/direnv` yourself, put the same loop in `~/.config/direnv/lib/direnv-az.sh`, pointing at the package path.
 
 ### Manual
 
