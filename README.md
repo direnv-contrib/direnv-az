@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![CI](https://github.com/direnv-contrib/direnv-az/actions/workflows/ci.yml/badge.svg)](https://github.com/direnv-contrib/direnv-az/actions/workflows/ci.yml)
 
-Stop copying secrets into `.env` files. `direnv-az` adds two functions to your `.envrc`: `use_az_secret` reads Azure Key Vault secrets when you enter a directory and exports them as environment variables, and `use_az_subscription` points the Azure SDKs and Terraform at the right subscription for that directory.
+Stop copying secrets into `.env` files. `direnv-az` adds two functions to your `.envrc`: `use az_secret` reads Azure Key Vault secrets when you enter a directory and exports them as environment variables, and `use az_subscription` points the Azure SDKs and Terraform at the right subscription for that directory.
 
 ## Requirements
 
@@ -79,24 +79,24 @@ direnv fetchurl https://raw.githubusercontent.com/direnv-contrib/direnv-az/v0.1.
 
 ```bash
 source_url "https://raw.githubusercontent.com/direnv-contrib/direnv-az/v0.1.0/lib/az_secret.sh" "sha256-…"
-use_az_secret my-vault/db-creds
+use az_secret my-vault/db-creds
 ```
 
 Replace `v0.1.0` with the release you want. direnv refuses to load a file whose content does not match the hash, so a tag that is later changed cannot swap the code under you.
 
 ## Usage
 
-Call the functions from a `.envrc`:
+Call the helpers from a `.envrc` with direnv's `use`. Each helper is a function named `use_<name>`, and `use <name>` calls it:
 
 ```bash
-use_az_subscription 00000000-0000-0000-0000-000000000000   # SDKs and Terraform use this subscription
+use az_subscription 00000000-0000-0000-0000-000000000000   # SDKs and Terraform use this subscription
 
-use_az_secret my-vault/db-creds              # JSON secret: one variable per key
-use_az_secret DB_URL=my-vault/db-url         # the raw secret string, with an explicit name
-use_az_secret my-vault/api-token@0123abcd    # a specific version, the default is the latest
+use az_secret my-vault/db-creds              # JSON secret: one variable per key
+use az_secret DB_URL=my-vault/db-url         # the raw secret string, with an explicit name
+use az_secret my-vault/api-token@0123abcd    # a specific version, the default is the latest
 ```
 
-### use_az_secret
+### use az_secret
 
 Each argument is `[NAME=]vault/secret[@version]`, where `vault` is the name of the Key Vault, not its URL.
 
@@ -109,7 +109,7 @@ Each argument is `[NAME=]vault/secret[@version]`, where `vault` is the name of t
 
 Variable names are uppercased, and characters outside `A-Z`, `0-9` and `_` become `_`. The secret is read with `az keyvault secret show`, which talks to the vault directly, so no subscription is needed.
 
-### use_az_subscription
+### use az_subscription
 
 Sets `AZURE_SUBSCRIPTION_ID`, which the Azure SDKs and `azd` read, and `ARM_SUBSCRIPTION_ID`, which Terraform and Pulumi read. The `az` CLI has no environment variable for the subscription, so it keeps using the default of your `az login`.
 
